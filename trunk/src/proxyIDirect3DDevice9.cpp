@@ -3145,7 +3145,13 @@ void renderSAMP ( void )
 		g_DeathList = stGetKillInfo();
 		if ( isBadPtr_writeAny(g_DeathList, sizeof(stKillInfo)) )
 			return;
+			
+		if ( g_SAMP->pRakClientInterface == NULL )
+			return;
 
+		// initialize raknet
+		g_RakClient = new RakClient( g_SAMP->pRakClientInterface );
+		
 		//init modCommands
 		if ( set.mod_commands_activated )
 			init_samp_chat_cmds();

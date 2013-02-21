@@ -209,6 +209,10 @@
 #include "proxyIDirect3D9.h"
 #include "proxyIDirect3DDevice9.h"
 
+// RakNet stuff
+#include "BitStream.h"
+#include "RakClient.h"
+
 // main.cpp functions
 void							traceLastFunc ( const char *szFunc );
 void							Log ( const char *fmt, ... );
