@@ -380,6 +380,44 @@ void cmd_tele_locations ()
 	addMessageToChatWindow( "To teleport use the menu or: /m0d_tele_loc <location name>" );
 }
 
+void cmd_pickup ( char *params )
+{
+	if ( !strlen( params ) )
+	{
+		addMessageToChatWindow( "USAGE: /m0d_pickup <pickup id>" );
+		return;
+	}
+
+	g_RakClient->SendPickUp( atoi( params ) );
+}
+
+void cmd_setclass ( char *params )
+{
+	if ( !strlen( params ) )
+	{
+		addMessageToChatWindow( "USAGE: /m0d_setclass <class id>" );
+		return;
+	}
+
+	g_RakClient->RequestClass( atoi( params ) );
+	g_RakClient->SendSpawn();
+}
+
+void cmd_fakekill ( char *params )
+{
+	int killer, reason, amount;
+	if ( !strlen( params ) || sscanf( params, "%d%d%d", &killer, &reason, &amount ) < 3 )
+	{
+		addMessageToChatWindow( "USAGE: /m0d_fakekill <killer id> <reason> <amount>" );
+		return;
+	}
+	if ( amount < 1 || killer < 0 || killer > SAMP_PLAYER_MAX )
+		return;
+
+	for ( int i = 0; i < amount; i++ ) 
+		g_RakClient->SendDeath( killer, reason );
+}
+
 // new functions to check for bad pointers
 int isBadPtr_SAMP_iVehicleID ( int iVehicleID )
 {
@@ -1139,6 +1177,9 @@ void init_samp_chat_cmds ()
 	addClientCommand( "m0d_teleport_location", (int)cmd_tele_loc );
 	addClientCommand( "m0d_tele_locations", (int)cmd_tele_locations );
 	addClientCommand( "m0d_teleport_locations", (int)cmd_tele_locations );
+	addClientCommand( "m0d_pickup", (int)cmd_pickup );
+	addClientCommand( "m0d_setclass", (int)cmd_setclass );
+	addClientCommand( "m0d_fakekill", (int)cmd_fakekill );
 }
 
 struct gui	*gui_samp_cheat_state_text = &set.guiset[1];
