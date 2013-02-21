@@ -1464,18 +1464,23 @@ void setSpecialAction ( uint8_t byteSpecialAction )
 	__asm pop ecx
 }
 
-#define FUNC_SENDSCMEVENT	0x18A0
+//#define FUNC_SENDSCMEVENT	0x18A0
+//void sendSCMEvent ( int iEvent, int iVehicleID, int iParam1, int iParam2 )
+//{
+//	if ( g_SAMP == NULL )
+//		return;
+//
+//	uint32_t	func = g_dwSAMP_Addr + FUNC_SENDSCMEVENT;
+//	__asm push iParam2
+//	__asm push iParam1
+//	__asm push iVehicleID
+//	__asm push iEvent
+//	__asm call func
+//}
+
 void sendSCMEvent ( int iEvent, int iVehicleID, int iParam1, int iParam2 )
 {
-	if ( g_SAMP == NULL )
-		return;
-
-	uint32_t	func = g_dwSAMP_Addr + FUNC_SENDSCMEVENT;
-	__asm push iParam2
-	__asm push iParam1
-	__asm push iVehicleID
-	__asm push iEvent
-	__asm call func
+	g_RakClient->SendSCMEvent( iVehicleID, iEvent, iParam1, iParam2 );
 }
 
 /*
