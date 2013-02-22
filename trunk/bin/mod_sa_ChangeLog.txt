@@ -3,6 +3,10 @@ by notaplane, jflm, nuckfuts, FYP and the game modification community
 updated for 0.3x by FYP
 http://code.google.com/p/mod-s0beit-sa/
 
+Version 4.3.2.2
+* Updated all SA-MP Patches and added new:
+SetPlayerTime, TogglePlayerSpectating, PlayerSpectatePlayer, PlayerSpectateVehicle, SetPlayerFightingStyle
+
 Version 4.3.2.1
 * Updated some SA-MP Patches
 * Fixed some bugs and problems
