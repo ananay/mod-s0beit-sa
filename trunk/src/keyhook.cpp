@@ -150,6 +150,11 @@ static LRESULT CALLBACK wnd_proc ( HWND wnd, UINT umsg, WPARAM wparam, LPARAM lp
 
 		}
 		break;
+		
+		case WM_KILLFOCUS:
+			keys_cleared = 0;
+			keyhook_clear_states();
+			break;
 	}
 wnd_proc_original:
 	return CallWindowProc( orig_wndproc, wnd, umsg, wparam, lparam );

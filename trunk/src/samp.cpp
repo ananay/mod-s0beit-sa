@@ -1706,58 +1706,132 @@ uint8_t _declspec ( naked ) StreamedOutInfo ( void )
 	}
 }
 
+void HandleRPCPacketFunc( unsigned char byteRPCID, RPCParameters *rpcParams, void ( *functionPointer ) ( RPCParameters * ) )
+{
+	// use this if you wanna log received RPCs (can help you with finding samp RPC-patches)
+	/*if ( byteRPCId != RPC_UpdateScoresPingsIPs )
+	{
+		int len = rpcParams ? rpcParams->numberOfBitsOfData / 8 : 0;
+		Log( "> [RPC Recv] id: %d, func offset: %p, len: %d", byteRPCId, (DWORD)functionPointer - g_dwSAMP_Addr, len );
+	}*/
+
+	if ( set.enable_extra_godmode && cheat_state->_generic.hp_cheat && rpcParams )
+	{
+		if ( byteRPCID == RPC_ScrSetPlayerHealth )
+		{
+			actor_info *self = actor_info_get( ACTOR_SELF, NULL );
+			if ( self )
+			{
+				BitStream bsData( rpcParams->input, ( rpcParams->numberOfBitsOfData / 8 ) + 1, false );
+				float fHealth;
+				bsData.Read( fHealth );
+				if ( fHealth < self->hitpoints )
+				{
+					cheat_state_text( "Warning: Server tried change your health to %0.1f", fHealth );
+					return; // exit from the function without processing RPC
+				}
+			}
+		}
+		else if ( byteRPCID == RPC_ScrSetVehicleHealth )
+		{
+			vehicle_info *vself = vehicle_info_get( VEHICLE_SELF, NULL );
+			if ( vself )
+			{
+				BitStream bsData( rpcParams->input, ( rpcParams->numberOfBitsOfData / 8 ) + 1, false );
+				short sId;
+				float fHealth;
+				bsData.Read( sId );
+				bsData.Read( fHealth );
+				if ( sId == g_Players->pLocalPlayer->sCurrentVehicleID && fHealth < vself->hitpoints )
+				{
+					cheat_state_text( "Warning: Server tried change your vehicle health to %0.1f", fHealth );
+					return; // exit from the function without processing RPC
+				}
+			}
+		}
+	}
+
+	functionPointer( rpcParams );
+}
+
+DWORD dwTemp1, dwTemp2;
+#define SAMP_HOOKEXIT_HANDLE_RPC		0x34F33
+uint8_t _declspec ( naked ) hook_handle_rpc_packet ( void )
+{
+	__asm pushad;
+	__asm mov dwTemp1, eax; // RPCParameters rpcParms
+	__asm mov dwTemp2, edi; // RPCNode *node
+	
+	HandleRPCPacketFunc( *( unsigned char *)dwTemp2, (RPCParameters *)dwTemp1, *( void ( ** ) ( RPCParameters *rpcParams ) )( dwTemp2 + 1 ) );
+	dwTemp1 = g_dwSAMP_Addr + SAMP_HOOKEXIT_HANDLE_RPC;
+
+	__asm popad;
+	// execute overwritten code
+	__asm add esp, 4
+	// exit from the custom code
+	__asm jmp dwTemp1;
+}
+
+#define SAMP_HOOKEXIT_HANDLE_RPC2		0x34F41
+uint8_t _declspec ( naked ) hook_handle_rpc_packet2 ( void )
+{
+	__asm pushad;
+	__asm mov dwTemp1, ecx; // RPCParameters rpcParms
+	__asm mov dwTemp2, edi; // RPCNode *node
+	
+	HandleRPCPacketFunc( *( unsigned char *)dwTemp2, (RPCParameters *)dwTemp1, *( void ( ** ) ( RPCParameters *rpcParams ) )( dwTemp2 + 1 ) );
+	dwTemp1 = g_dwSAMP_Addr + SAMP_HOOKEXIT_HANDLE_RPC2;
+
+	__asm popad;
+	// exit from the custom code
+	__asm jmp dwTemp1;
+}
+
+void SetupSAMPHook( char *szName, DWORD dwFuncOffset, void *Func, int iType, int iSize, char *szCompareBytes )
+{
+	CDetour api;
+	int strl = strlen( szCompareBytes );
+	uint8_t *bytes = hex_to_bin( szCompareBytes );
+
+	if ( !strl || !bytes || memcmp_safe( (uint8_t *)g_dwSAMP_Addr + dwFuncOffset, bytes, strl / 2 ) )
+	{
+		if ( api.Create( (uint8_t *)( (uint32_t)g_dwSAMP_Addr ) + dwFuncOffset, (uint8_t *)Func, iType, iSize ) == 0 )
+			Log( "Failed to hook %s.", szName );
+	}
+	else
+	{
+		Log( "Failed to hook %s (memcmp)", szName );
+	}
+
+	if ( bytes )
+		free( bytes );
+}
+
 #define SAMP_HOOKPOS_ServerMessage			0x7973A
 #define SAMP_HOOKPOS_ClientMessage 			0xDC0B
 #define SAMP_HOOK_STATECHANGE				0x10FB8
 #define SAMP_HOOK_StreamedOutInfo			0xF4DA
+#define SAMP_HOOKENTER_HANDLE_RPC			0x34F2D
+#define SAMP_HOOKENTER_HANDLE_RPC2			0x34EB9
 void installSAMPHooks ()
 {
 	if( g_SAMP == NULL )
 		return;
 
-	CDetour api;
-
 	if ( set.anti_spam || set.chatbox_logging )
 	{
-		if ( memcmp_safe((uint8_t *)g_dwSAMP_Addr + SAMP_HOOKPOS_ServerMessage, hex_to_bin("6A00C1E8"), 4) )
-		{
-			if ( api.Create((uint8_t *) ((uint32_t) g_dwSAMP_Addr) + SAMP_HOOKPOS_ServerMessage,
-							 (uint8_t *)server_message_hook, DETOUR_TYPE_JMP, 5) == 0 )
-				Log( "Failed to hook ServerMessage." );
-		}
-		else
-			Log( "Failed to hook ServerMessage (memcmp)" );
-
-		if ( memcmp_safe((uint8_t *)g_dwSAMP_Addr + SAMP_HOOKPOS_ClientMessage, hex_to_bin("663BD175"), 4) )
-		{
-			if ( api.Create((uint8_t *) ((uint32_t) g_dwSAMP_Addr) + SAMP_HOOKPOS_ClientMessage,
-							 (uint8_t *)client_message_hook, DETOUR_TYPE_JMP, 5) == 0 )
-				Log( "Failed to hook ClientMessage." );
-		}
-		else
-			Log( "Failed to hook ClientMessage (memcmp)" );
+		SetupSAMPHook( "ServerMessage", SAMP_HOOKPOS_ServerMessage, server_message_hook, DETOUR_TYPE_JMP, 5, "6A00C1E8" );
+		SetupSAMPHook( "ClientMessage", SAMP_HOOKPOS_ClientMessage, client_message_hook, DETOUR_TYPE_JMP, 5, "663BD175" );
 	}
 
 	if ( set.anti_carjacking )
 	{
-		if ( memcmp_safe((uint8_t *)g_dwSAMP_Addr + SAMP_HOOK_STATECHANGE, hex_to_bin("6A0568E8"), 4) )
-		{
-			if ( api.Create((uint8_t *) ((uint32_t) g_dwSAMP_Addr) + SAMP_HOOK_STATECHANGE, (uint8_t *)carjacked_hook,
-							 DETOUR_TYPE_JMP, 5) == 0 )
-				Log( "Failed to hook StateChange." );
-		}
-		else
-			Log( "Failed to hook StateChange (memcmp)" );
+		SetupSAMPHook( "AntiCarJack", SAMP_HOOK_STATECHANGE, carjacked_hook, DETOUR_TYPE_JMP, 5, "6A0568E8" );
 	}
 
-	if ( memcmp_safe((uint8_t *)g_dwSAMP_Addr + SAMP_HOOK_StreamedOutInfo, hex_to_bin("E8"), 1) )
-	{
-		if ( api.Create((uint8_t *) ((uint32_t) g_dwSAMP_Addr) + SAMP_HOOK_StreamedOutInfo,
-						 (uint8_t *)StreamedOutInfo, DETOUR_TYPE_CALL_FUNC, 5) == 0 )
-			Log( "Failed to hook StreamedOutInfo." );
-	}
-	else
-		Log( "Failed to hook StreamedOutInfo (memcmp)" );
+	SetupSAMPHook( "StreamedOutInfo", SAMP_HOOK_StreamedOutInfo, StreamedOutInfo, DETOUR_TYPE_CALL_FUNC, 5, "E8" );
+	SetupSAMPHook( "HandleRPCPacket", SAMP_HOOKENTER_HANDLE_RPC, hook_handle_rpc_packet, DETOUR_TYPE_JMP, 6, "FF570183C404" );
+	SetupSAMPHook( "HandleRPCPacket2", SAMP_HOOKENTER_HANDLE_RPC2, hook_handle_rpc_packet2, DETOUR_TYPE_JMP, 6, "FF5701E980000000" );
 }
 
 #define SAMP_ONFOOTSENDRATE		0xE6098 // at 1000369A  MOV ECX,DWORD PTR DS:[100E6098]
@@ -1863,13 +1937,13 @@ int sampPatchDisableChatInputAdjust ( int iEnabled )
 #define	FUNC_DEATH	0x4BC0
 void sendDeath ( void )
 {
- if ( g_SAMP == NULL )
-  return;
+	if ( g_SAMP == NULL )
+		return;
 
- uint32_t func = g_dwSAMP_Addr + FUNC_DEATH;
- void  *lpPtr = g_Players->pLocalPlayer;
- __asm mov ecx, dword ptr[lpPtr]
- __asm push ecx
- __asm call func
- __asm pop ecx
+	uint32_t func = g_dwSAMP_Addr + FUNC_DEATH;
+	void  *lpPtr = g_Players->pLocalPlayer;
+	__asm mov ecx, dword ptr[lpPtr]
+	__asm push ecx
+	__asm call func
+	__asm pop ecx
 }

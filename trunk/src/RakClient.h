@@ -74,7 +74,7 @@ enum ScriptRPCEnumeration
 	RPC_ScrSetPlayerName = 255,
 	RPC_ScrSetPlayerPos = 255,
 	RPC_ScrSetPlayerPosFindZ = 255,
-	RPC_ScrSetPlayerHealth = 255,
+	RPC_ScrSetPlayerHealth = 54,
 	RPC_ScrPutPlayerInVehicle = 255,
 	RPC_ScrRemovePlayerFromVehicle = 255,
 	RPC_ScrSetPlayerColor = 255,
@@ -102,7 +102,7 @@ enum ScriptRPCEnumeration
 	RPC_ScrDisableMapIcon = 255,
 	RPC_ScrSetWeaponAmmo = 255,
 	RPC_ScrSetGravity = 255,
-	RPC_ScrSetVehicleHealth = 255,
+	RPC_ScrSetVehicleHealth = 162,
 	RPC_ScrAttachTrailerToVehicle = 255,
 	RPC_ScrDetachTrailerFromVehicle = 255,
 	RPC_ScrCreateObject = 255,
@@ -446,7 +446,8 @@ public:
 	void SendSCMEvent( int vehicleID, int eventId, int param1, int param2 );
 	void SendSpawn( void );
 	void SendPickUp( int pickupId );
-	
+	RakClientInterface *GetRakClientInterface( void ) { return pRakClient; };
+
 private:
 	RakClientInterface *pRakClient;
 };

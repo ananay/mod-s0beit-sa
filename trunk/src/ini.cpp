@@ -957,6 +957,8 @@ static void ini_init ( void )
 
 	if ( (ent = ini_register_entry("enable_clouds", TYPE_BOOL)) != NULL )
 		ini_register_data( ent, &set.enable_clouds, "true" );
+	if ( (ent = ini_register_entry("enable_extra_godmode", TYPE_BOOL)) != NULL )
+		ini_register_data( ent, &set.enable_extra_godmode, "true" );
 }
 
 int iGTAPatchesCount = 0;

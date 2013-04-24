@@ -342,6 +342,7 @@
     <ClInclude Include="debug_classify.h" />
     <ClInclude Include="dumb_menu.h" />
     <ClInclude Include="GTAfuncs.h" />
+    <ClInclude Include="HookedRakClient.h" />
     <ClInclude Include="ini.h" />
     <ClInclude Include="keyhook.h" />
     <ClInclude Include="math_stuff.h" />
@@ -501,6 +502,7 @@
     <ClCompile Include="debug_classify.cpp" />
     <ClCompile Include="dumb_menu.cpp" />
     <ClCompile Include="GTAfuncs.cpp" />
+    <ClCompile Include="HookedRakClient.cpp" />
     <ClCompile Include="ini.cpp" />
     <ClCompile Include="keyhook.cpp" />
     <ClCompile Include="math_stuff.cpp" />
