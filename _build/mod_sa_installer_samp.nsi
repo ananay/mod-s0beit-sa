@@ -6,8 +6,8 @@
 !define MUI_INSTFILESPAGE_PROGRESSBAR colored
 !define NAME 'mod_sa'
 !define MP 'SA-MP'
-!define MP_VERSION 'v0.3d'
-!define VERSION 'v4.3.1.2'
+!define MP_VERSION 'v0.3x R1'
+!define VERSION 'v4.3.3.0'
 
 ; create output directory if it doesn't exist
 !system 'mkdir "..\_distro_installers\"'
@@ -46,7 +46,7 @@ FunctionEnd
 ; branding url
 !define MUI_CUSTOMFUNCTION_GUIINIT onGUIInit
 Function onGUIInit
- BrandingURL::Set /NOUNLOAD "0" "0" "200" "http://code.google.com/p/m0d-s0beit-sa/"
+ BrandingURL::Set /NOUNLOAD "0" "0" "200" "http://code.google.com/p/mod-s0beit-sa/"
 FunctionEnd
 
 ; main installation screen variables
@@ -61,10 +61,10 @@ FunctionEnd
 
 ; dump detail text to a log file
 Function .onInstSuccess
-	DumpLog::DumpLog "$INSTDIR\${NAME}_setup.log" .R0
+	DumpLog::DumpLog "$INSTDIR\mod_sa\${NAME}_setup.log" .R0
 FunctionEnd
 Function .onInstFailed
-	DumpLog::DumpLog "$INSTDIR\${NAME}_setup.log" .R0
+	DumpLog::DumpLog "$INSTDIR\mod_sa\${NAME}_setup.log" .R0
 FunctionEnd
 
 ; setup MUI
@@ -98,22 +98,32 @@ Section "Install" SecDummy
 	Delete s0beit_hack_a3v5.raw
 	Delete m0d_s0beit_sa.raw
 	Delete m0d_s0beit_sa_setup.log
-	; delete new old crap
 	Delete m0d_s0beit_sa.ini
 	Delete m0d_s0beit_sa.log
 	Delete m0d_s0beit_sa_all.log
-	; delete from current previous installation
 	Delete mod_sa_setup.log
+	; delete new old crap
+	Delete mod_sa.ini
+	Delete mod_sa.log
+	Delete mod_sa.raw
+	Delete mod_sa_all.log
+	Delete mod_sa_ChangeLog.txt
+	Delete mod_sa_chatbox.log
+	Delete mod_sa_chatbox_all.log
+
+	; delete from current previous installation
+	Delete ..\mod_sa\mod_sa_setup.log
 
 	; install the basics
 	File ..\bin\d3d9.dll
-	File ..\bin\mod_sa.raw
-	File ..\bin\mod_sa_ChangeLog.txt
-	File ..\bin\speedo.png
-	File ..\bin\needle.png
+	SetOutPath "$INSTDIR\mod_sa"
+	File ..\bin\mod_sa\mod_sa.raw
+	File ..\bin\mod_sa\mod_sa_ChangeLog.txt
+	File ..\bin\mod_sa\speedo.png
+	File ..\bin\mod_sa\needle.png
 
 	; need to figure out how to patch this instead of overwriting every time
-	File ..\bin\mod_sa.ini
+	File ..\bin\mod_sa\mod_sa.ini
 
 	SetOutPath "$INSTDIR\data"
 	SetOverwrite off
@@ -130,7 +140,7 @@ Section "Install" SecDummy
 	Call DirectXUpdater
 
 	WriteUninstaller "$INSTDIR\Uninstall_${NAME}.exe"
-	
+
 	; add game directory location to the registry even if it exists
 	; just in case someone changed their installation location.
 	; this should happen much more often than using more than one
@@ -141,15 +151,17 @@ SectionEnd
 ; Uninstall Sequence
 Section "Uninstall"
 	Delete "$INSTDIR\d3d9.dll"
-	Delete "$INSTDIR\mod_sa.log"
-	Delete "$INSTDIR\mod_sa_all.log"
-	Delete "$INSTDIR\mod_sa.raw"
-	Delete "$INSTDIR\speedo.png"
-	Delete "$INSTDIR\needle.png"
-	Delete "$INSTDIR\mod_sa_setup.log"
+	Delete "$INSTDIR\mod_sa\mod_sa.log"
+	Delete "$INSTDIR\mod_sa\mod_sa_all.log"
+	Delete "$INSTDIR\mod_sa\mod_sa_chatbox.log"
+	Delete "$INSTDIR\mod_sa\mod_sa_chatbox_all.log"
+	Delete "$INSTDIR\mod_sa\mod_sa.raw"
+	Delete "$INSTDIR\mod_sa\speedo.png"
+	Delete "$INSTDIR\mod_sa\needle.png"
+	Delete "$INSTDIR\mod_sa\mod_sa_setup.log"
 
 	; this should not be deleted
-	;Delete "$INSTDIR\mod_sa.ini"
+	;Delete "$INSTDIR\mod_sa\mod_sa.ini"
 	; or these
 	;Delete "$INSTDIR\data\carmods.two"
 	;Delete "$INSTDIR\data\default.two"
@@ -158,6 +170,8 @@ Section "Uninstall"
 	;Delete "$INSTDIR\data\timecyc.two"
 	;Delete "$INSTDIR\data\vehicles.two"
 	;Delete "$INSTDIR\data\surface.two"
-	
+
+	RMDir "$INSTDIR\mod_sa"
+
 	Delete "$INSTDIR\Uninstall_${NAME}.exe"
 SectionEnd

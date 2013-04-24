@@ -41,7 +41,8 @@ int cheat_panic ( void )
 
 	// sa-mp related
 	static int	pstate_chat = 0, // chat
-		pstate_deathlist = 0; // deathlist
+		pstate_deathlist = 0, // deathlist
+		pstate_extragm = 0; // extra godmode
 
 	if ( KEY_PRESSED(set.key_panic) )
 	{
@@ -135,6 +136,8 @@ int cheat_panic ( void )
 				pstate_chat = g_Chat->iChatWindowMode;
 				g_Chat->iChatWindowMode = 2;
 			}
+			pstate_extragm = set.enable_extra_godmode;
+			set.enable_extra_godmode = 0;
 		}
 		else
 		{
@@ -189,6 +192,9 @@ int cheat_panic ( void )
 			{
 				g_Chat->iChatWindowMode = pstate_chat;
 			}
+
+			// restore extra invincibility mode state
+			set.enable_extra_godmode = pstate_extragm;
 
 			// clear cheat state text
 			cheat_state_text( NULL );

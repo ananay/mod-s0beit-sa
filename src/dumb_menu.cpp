@@ -191,6 +191,7 @@
 #define ID_MENU_SAMPMISC_RENDEROBJTXT		15
 #define ID_MENU_SAMPMISC_RENDERPCKTXT		16
 #define ID_MENU_SAMPMISC_M0DCOMMANDS		17
+#define ID_MENU_SAMPMISC_EXTRAGM			18
 
 #define ID_MENU_SPECIAL_ACTION_NONE				0
 #define ID_MENU_SPECIAL_ACTION_USEJETPACK		2
@@ -2057,6 +2058,9 @@ static int menu_callback_sampmisc ( int op, struct menu_item *item )
 
 			case ID_MENU_SAMPMISC_M0DCOMMANDS:
 				return get_isModCommandsActive();
+
+			case ID_MENU_SAMPMISC_EXTRAGM:
+				return set.enable_extra_godmode;
 			}
 		}
 
@@ -2147,6 +2151,10 @@ static int menu_callback_sampmisc ( int op, struct menu_item *item )
 						init_samp_chat_cmds();
 					}
 				}
+				break;
+
+			case ID_MENU_SAMPMISC_EXTRAGM:
+				set.enable_extra_godmode ^= 1;
 				break;
 			}
 		}
@@ -3366,6 +3374,7 @@ void menu_maybe_init ( void )
 		menu_item_add( menu_sampmisc, menu_telepickup, "Teleport to pickup", ID_MENU_SAMPMISC_TELEPICKUP, MENU_COLOR_DEFAULT, NULL );
 		menu_item_add( menu_sampmisc, NULL, "Render pickup texts", ID_MENU_SAMPMISC_RENDERPCKTXT, MENU_COLOR_DEFAULT, NULL );
 		menu_item_add( menu_sampmisc, NULL, "Load M0D-Commands", ID_MENU_SAMPMISC_M0DCOMMANDS, MENU_COLOR_DEFAULT, NULL );
+		menu_item_add( menu_sampmisc, NULL, "Extra godmode", ID_MENU_SAMPMISC_EXTRAGM, MENU_COLOR_DEFAULT, NULL );
 
 		/* main menu -> sampmisc -> change game state */
 		menu_item_add( menu_gamestate, NULL, "Connecting", GAMESTATE_CONNECTING, MENU_COLOR_DEFAULT, NULL );

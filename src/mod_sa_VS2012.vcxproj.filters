@@ -870,6 +870,9 @@
     <ClInclude Include="RakClient.h">
       <Filter>Cheat\RakNet</Filter>
     </ClInclude>
+    <ClInclude Include="HookedRakClient.h">
+      <Filter>Cheat\RakNet</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="game_sa\C3DMarkerSA.cpp">
@@ -1294,6 +1297,9 @@
       <Filter>Cheat\RakNet</Filter>
     </ClCompile>
     <ClCompile Include="RakClient.cpp">
+      <Filter>Cheat\RakNet</Filter>
+    </ClCompile>
+    <ClCompile Include="HookedRakClient.cpp">
       <Filter>Cheat\RakNet</Filter>
     </ClCompile>
   </ItemGroup>

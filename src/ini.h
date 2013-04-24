@@ -381,6 +381,7 @@ struct settings
 	int						render_object_texts;
 	float					object_tags_dist;
 	int						enable_clouds;
+	int						enable_extra_godmode;
 
 	///////////////////////////////////////////////
 	// DO NOT PUT ANYTHING AFTER THIS, DUMB FUCK //
