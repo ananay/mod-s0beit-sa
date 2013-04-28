@@ -3151,6 +3151,7 @@ void renderSAMP ( void )
 
 		// initialize raknet
 		g_RakClient = new RakClient( g_SAMP->pRakClientInterface );
+		g_SAMP->pRakClientInterface = new HookedRakClientInterface();
 		
 		//init modCommands
 		if ( set.mod_commands_activated )
