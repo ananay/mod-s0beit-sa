@@ -2882,10 +2882,7 @@ static int menu_callback_server_list ( int op, struct menu_item *item )
 		{
 			if ( !set.use_current_name )
 				setLocalPlayerName( server->nickname );
-			strcpy( g_SAMP->szIP, server->ip );
-			g_SAMP->ulPort = server->port;
-			setPassword( server->password );
-			joining_server = 1;
+			changeServer( server->ip, server->port, server->password );
 
 			return 1;
 		}

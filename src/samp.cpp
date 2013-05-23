@@ -112,87 +112,44 @@ void cmd_change_server ( char *param )	//127.0.0.1 7777 Username Password
 {
 	traceLastFunc( "cmd_change_server()" );
 
-	char	*result;
 	bool	success = false;
 
-	char	IP[257], LocalName[MAX_PLAYER_NAME];
-	int		Port;
-	strcpy( IP, g_SAMP->szIP );
-	Port = g_SAMP->ulPort;
-	strcpy( LocalName, getPlayerName(g_Players->sLocalPlayerID) );
+	char	IP[128], Nick[MAX_PLAYER_NAME], Password[128] = "", Port[128];
+	int		iPort;
 
-	result = strtok( param, " :" );
-	for ( int i = 0; i <= 4; i++ )
+	int ipc = sscanf( param, "%s%s%s%s", IP, Port, Nick, Password );
+	if ( ipc < 2 )
 	{
-		if ( result == NULL && !success )
-		{
-			addMessageToChatWindow( "USAGE: /m0d_change_server <ip> <port> <Username> <Server Password>" );
-			addMessageToChatWindow( "Variables that are set to \"NULL\" (capitalized) will be ignored." );
-			addMessageToChatWindow( "If you set the Password to \"NULL\" it is set to <no server password>." );
-			addMessageToChatWindow( "Username and password can also be left out completely." );
-			strcpy( g_SAMP->szIP, IP );
-			g_SAMP->ulPort = Port;
-			setLocalPlayerName( LocalName );
-			return;
-		}
-		else if ( result == NULL && success )
-		{
-			joining_server = 1;
-			return;
-		}
-
-		switch ( i )
-		{
-		case 0:
-			if ( strcmp(result, "NULL") != 0 )
-				strcpy( g_SAMP->szIP, result );
-			break;
-
-		case 1:
-			if ( strcmp(result, "NULL") != 0 )
-				g_SAMP->ulPort = atoi( result );
-			success = true;
-			break;
-
-		case 2:
-			if ( strcmp(result, "NULL") != 0 )
-			{
-				if ( strlen(result) > ALLOWED_PLAYER_NAME_LENGTH )
-					addMessageToChatWindow( "Username was too long - adjusted size." );
-				strncpy_s( LocalName, result, ALLOWED_PLAYER_NAME_LENGTH );
-				setLocalPlayerName( LocalName );
-			}
-			break;
-
-		case 3:
-			if ( strcmp(result, "NULL") != 0 )
-				setPassword( result );
-			else
-				setPassword( "" );
-			break;
-
-		default:
-			{
-				addMessageToChatWindow( "Too many variables." );
-				addMessageToChatWindow( "USAGE: /m0d_change_server <ip> <port> <Username> <Server Password>" );
-				addMessageToChatWindow( "Variables that are set to \"NULL\" (capitalized) will be ignored." );
-				addMessageToChatWindow( "If you set the Password to \"NULL\" it is set to <no server password>." );
-				addMessageToChatWindow( "Username and password can also be left out completely." );
-				strcpy( g_SAMP->szIP, IP );
-				g_SAMP->ulPort = Port;
-				strcpy( LocalName, getPlayerName(g_Players->sLocalPlayerID) );
-				if ( i >= 3 )
-				{
-					addMessageToChatWindow( "Setting password to <no server password>." );
-					setPassword( "" );
-				}
-
-				return;
-			}
-		}
-
-		result = strtok( NULL, " :" );
+		addMessageToChatWindow( "USAGE: /m0d_change_server <ip> <port> <Username> <Server Password>" );
+		addMessageToChatWindow( "Variables that are set to \"NULL\" (capitalized) will be ignored." );
+		addMessageToChatWindow( "If you set the Password to \"NULL\" it is set to <no server password>." );
+		addMessageToChatWindow( "Username and password can also be left out completely." );
+		return;
 	}
+	if ( stricmp( IP, "NULL" ) == NULL )
+		strcpy( IP, g_SAMP->szIP );
+
+	if ( stricmp( Port, "NULL" ) == NULL )
+		iPort = g_SAMP->ulPort;
+	else
+		iPort = atoi( Port );
+
+	if ( ipc > 2 )
+	{
+		if ( stricmp( Nick, "NULL" ) != NULL )
+		{
+			if ( strlen( Nick ) > ALLOWED_PLAYER_NAME_LENGTH )
+				Nick[ALLOWED_PLAYER_NAME_LENGTH] = '\0';
+			setLocalPlayerName( Nick );
+		}
+	}
+	if ( ipc > 3 )
+	{
+		if ( stricmp( Password, "NULL" ) == NULL )
+			strcpy( Password, "" );
+	}
+
+	changeServer( IP, iPort, Password );
 }
 
 void cmd_change_server_fav ( char *param )
@@ -222,12 +179,6 @@ void cmd_change_server_fav ( char *param )
 		return;
 	}
 
-	char	IP[257], LocalName[29];
-	int		Port;
-	strcpy( IP, g_SAMP->szIP );
-	Port = g_SAMP->ulPort;
-	strcpy( LocalName, getPlayerName(g_Players->sLocalPlayerID) );
-
 	for ( int i = 0; i < INI_SERVERS_MAX; i++ )
 	{
 		if ( set.server[i].server_name == NULL || set.server[i].ip == NULL
@@ -240,10 +191,8 @@ void cmd_change_server_fav ( char *param )
 		if ( !set.use_current_name )
 			setLocalPlayerName( set.server[i].nickname );
 
-		strcpy( g_SAMP->szIP, set.server[i].ip );
-		g_SAMP->ulPort = set.server[i].port;
-		setPassword( set.server[i].password );
-		joining_server = 1;
+		changeServer( set.server[i].ip, set.server[i].port, set.server[i].password );
+
 		return;
 	}
 
@@ -455,8 +404,32 @@ void getSamp ()
 				Log( "%s was detected. g_dwSAMP_Addr: 0x%p", g_szSAMPVer, g_dwSAMP_Addr );
 
 				// anticheat patch
-				if(memcmp_safe((uint32_t *)(g_dwSAMP_Addr + 0x60FF0), "\x8B\x54\x24\x08", 4)) 
-					memset_safe((uint32_t *)(g_dwSAMP_Addr + 0x60FF0), 0xC3, 1);
+				struct patch_set fuckAC =
+				{
+					 "Anticheat patch", 0, 0,
+					 {
+						 { 1, (void *)( g_dwSAMP_Addr + 0x60FF0 ), NULL, (uint8_t *)"\xC3", 0 }, 
+						 { 1, (void *)( g_dwSAMP_Addr + 0x5B24B ), NULL, (uint8_t *)"\xEB", 0 }, 
+						 { 1, (void *)( g_dwSAMP_Addr + 0x70550 ), NULL, (uint8_t *)"\xEB", 0 }
+					 }
+				};
+				patcher_install( &fuckAC );
+
+				DWORD ACPatchOffsets[] =
+				{
+					0x0005B241, 0x002A048F, 0x002A1770, 0x0001277F, 0x000AD4B3, 0x002890C3, 0x0028FD62, 
+					0x00293C76, 0x0029D936, 0x0026F40C, 0x00263839, 0x0024E8F4, 0x002F2343
+				};
+				DWORD ACPatchOffsets2[] = 
+				{
+					0x00015064, 0x00261D1D, 0x0026E444, 0x0027CAA4, 0x00286CD6, 0x002EDBEE, 0x00301174
+				};
+				static DWORD ACC[2] = { 0, 0 };
+				DWORD *pACC[] = { &ACC[0], &ACC[2] };
+				for ( int i = 0; i < sizeof( ACPatchOffsets ) / sizeof( DWORD ); i++ )
+					memcpy_safe( (void *)( g_dwSAMP_Addr + ACPatchOffsets[i] ), &pACC[0], 4 );
+				for ( int i = 0; i < sizeof( ACPatchOffsets2 ) / sizeof( DWORD ); i++ )
+					memcpy_safe( (void *)( g_dwSAMP_Addr + ACPatchOffsets2[i] ), &pACC[1], 4 );
 
 				iIsSAMPSupported = 1;
 			}
@@ -1946,4 +1919,24 @@ void sendDeath ( void )
 	__asm push ecx
 	__asm call func
 	__asm pop ecx
+}
+
+#define FUNC_ENCRYPT_PORT 0x193A0
+#define SAMP_ENCRYPED_PORT_OFFSET 0xFEA38
+void changeServer( const char *pszIp, unsigned ulPort, const char *pszPassword )
+{
+	if ( !g_SAMP )
+		return;
+
+	// 1st version
+	( ( void ( __cdecl * )( unsigned ) )( g_dwSAMP_Addr + FUNC_ENCRYPT_PORT ) )( ulPort );
+
+	// 2st version
+	// *(unsigned short *)( g_dwSAMP_Addr + SAMP_ENCRYPED_PORT_OFFSET ) = ( ulPort + 1 ) ^ 0x5555;
+
+	disconnect( 500 );
+	strcpy( g_SAMP->szIP, pszIp );
+	g_SAMP->ulPort = ulPort;
+	setPassword( (char *)pszPassword );
+	joining_server = 1;
 }
