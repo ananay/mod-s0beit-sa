@@ -3,6 +3,11 @@ by notaplane, jflm, nuckfuts, FYP and the game modification community
 updated for 0.3x by FYP
 http://code.google.com/p/mod-s0beit-sa/
 
+Version 4.3.3.1
+* Fixed SA-MP Patch "NOP SetEngineState", thanks to povargek for this.
+* Fixed issue with connecting to servers from mod_sa's favorite server list.
+* Added more anticheat-patches.
+
 Version 4.3.3.0
 * Fixed SA-MP Patch "Disable unoccupied data", and added new: 
 NOP SetPlayerSkin, NOP SetPlayerSkillLevel, NOP StopAudioStream, NOP EditObject

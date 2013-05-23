@@ -786,6 +786,7 @@ int												sampPatchDisableInteriorUpdate ( int iEnabled );
 int												sampPatchDisableScoreboardToggleOn ( int iEnabled );
 int												sampPatchDisableChatInputAdjust ( int iEnabled );
 void											sendDeath ( void );
+void											changeServer( const char *pszIp, unsigned ulPort, const char *pszPassword );
 
 // global pointer externals
 extern int										iIsSAMPSupported;
