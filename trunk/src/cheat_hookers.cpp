@@ -2022,21 +2022,7 @@ void _cdecl PedCamUp ( DWORD dwCam )
 	else
 	{
 		// Calculates the up vector for the ped camera.
-		CVector *pvecUp = ( CVector * ) ( dwCam + 0x1B4 );
-		CVector *pvecLookDir = ( CVector * ) ( dwCam + 0x190 );
-
-		if (!pvecUp || !pvecLookDir)
-			return;
-
-		CVector newVecUp = *pvecLookDir;
-		newVecUp.CrossProduct( pvecUp );
-		newVecUp.CrossProduct( pvecLookDir );
-		newVecUp.Normalize(); // was commented out, why?
-
-		if (!newVecUp.IsNearZero())
-		{
-			*pvecUp = newVecUp;
-		}
+		// 0x: Let, GTA:SA Calc it if there are any problems, there are numerous fixes.
 	}
 }
 

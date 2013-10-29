@@ -28,7 +28,7 @@
 
 #define M0D_FOLDER		"mod_sa\\"
 #define M0D_NAME		"mod_sa"
-#define M0D_VERSION		"4.3.3.1 by FYP"
+#define M0D_VERSION		"4.3.3.2 by FYP"
 #define SAMP_VERSION	"SA:MP 0.3x"
 #define M0D_DEV_ADVANCEDINFO
 

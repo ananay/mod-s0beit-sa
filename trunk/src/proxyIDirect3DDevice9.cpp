@@ -3159,7 +3159,13 @@ void renderSAMP ( void )
 
 		// patch
 		memcpy_safe((void *)(g_dwSAMP_Addr + SAMP_PATCH_NOCARCOLORRESETTING), "\xC3", 1);
+		memcpy_safe((void *)0x004B35A0, (uint8_t *)"\x83\xEC\x0C\x56\x8B\xF1", 6 ); // godmode patch
+		memcpy_safe((void *)0x82C5CC, "\xC9\xC3", 2); // little anticrash patch (gta:sa)
 		
+
+		// 0x: Set's the Frame Sleeping to 0 so you get more performance (sa:mp init is so far a good place ;d) .
+		*(BYTE*)0xBAB318 = 0;  *(BYTE*)0x53E94C = 0;
+
 		g_renderSAMP_initSAMPstructs = 1;
 	}
 
@@ -4035,8 +4041,55 @@ HRESULT proxyIDirect3DDevice9::Reset ( D3DPRESENT_PARAMETERS *pPresentationParam
 				Sleep( 100 );
 		}
 
-		// init our window mode
-		proxyID3DDevice9_InitWindowMode( pPresentationParameters );
+		// Window Mode shitz... awh
+		// window mode toggle, flips set.window_mode bit
+		if ( g_isRequestingWindowModeToggle )
+		{
+			g_isRequestingWindowModeToggle = false;
+			set.window_mode ^= 1;
+		}
+		if ( set.window_mode ) {
+			if ( set.window_mode_titlebar )
+			{
+				RECT	um;		// damn near killed um
+
+				// add caption bar, etc
+				SetWindowLong( pPresentationParameters->hDeviceWindow, GWL_STYLE,
+							   WS_POPUP | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE );
+
+				// update caption bar, etc
+				SetWindowPos( pPresentationParameters->hDeviceWindow, HWND_NOTOPMOST, 0, 0, 0, 0,
+							  SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE );
+
+				// the client area of the window must be the same size as the back buffer
+				GetClientRect( pPresentationParameters->hDeviceWindow, &um );
+				if ( um.right == pPresentationParameters->BackBufferWidth
+				 &&	 um.bottom == pPresentationParameters->BackBufferHeight )
+				SetWindowPos( pPresentationParameters->hDeviceWindow, HWND_NOTOPMOST, 0, 0,
+							  pPresentationParameters->BackBufferWidth + (pPresentationParameters->BackBufferWidth - um.right),
+								  pPresentationParameters->BackBufferHeight + (pPresentationParameters->BackBufferHeight - um.bottom),
+									  SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOMOVE );
+				if ( pool_actor != NULL )
+				{
+					int x, y;
+					x = GetSystemMetrics( SM_CXSCREEN );
+					y = GetSystemMetrics( SM_CYSCREEN );
+					SetWindowPos( pPresentationParameters->hDeviceWindow, HWND_NOTOPMOST,
+								  (x / 2) - (pPresentationParameters->BackBufferWidth / 2),
+								  (y / 2) - (pPresentationParameters->BackBufferHeight / 2),
+								  pPresentationParameters->BackBufferWidth + (pPresentationParameters->BackBufferWidth - um.right),
+							  pPresentationParameters->BackBufferHeight +
+									  (pPresentationParameters->BackBufferHeight - um.bottom), SWP_SHOWWINDOW );
+				}
+			}
+			else
+			{
+				// center the window
+				SetWindowPos( pPresentationParameters->hDeviceWindow, HWND_NOTOPMOST, 0, 0, 0, 0,
+							  SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE );
+			}
+		}
+		set.window_mode = ( g_RsGlobal->ps->fullscreen == 0 );
 
 		// update the global Present Param struct AFTER original reset, only if it's ok
 		pPresentParam = *pPresentationParameters;

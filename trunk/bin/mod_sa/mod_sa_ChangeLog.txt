@@ -3,6 +3,12 @@ by notaplane, jflm, nuckfuts, FYP and the game modification community
 updated for 0.3x by FYP
 http://code.google.com/p/mod-s0beit-sa/
 
+Version 4.3.3.2
+* Fixed issues with the FPS (caused by the Window Mode).
+* Fixed issues with the Camera looking upwards if you're freezed.
+* Removed "Disable Loading Screen Patch" (it's actually useless.)
+* Added Anticrash & Godmode Patch
+
 Version 4.3.3.1
 * Fixed SA-MP Patch "NOP SetEngineState", thanks to povargek for this.
 * Fixed issue with connecting to servers from mod_sa's favorite server list.
