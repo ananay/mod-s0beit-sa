@@ -1,7 +1,12 @@
 mod_sa
 by notaplane, jflm, nuckfuts, FYP and the game modification community
-updated for 0.3x by FYP
+updated for 0.3x, 0.3z by FYP
 http://code.google.com/p/mod-s0beit-sa/
+http://blasthack.net
+
+Version 4.3.3.3
+* Updated on 0.3z R1
+* mod's chat now more colorful
 
 Version 4.3.3.2
 * Fixed issues with the FPS (caused by the Window Mode).

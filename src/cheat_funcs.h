@@ -506,6 +506,7 @@ size_t								strlcat ( char *dst, const char *src, size_t size );
 
 void								*memdup ( const void *src, int len );
 uint8_t								*hex_to_bin ( const char *str );
+D3DCOLOR							hex_to_color( const char *str, int len );
 
 extern const struct weapon_entry	weapon_list[];
 extern const struct vehicle_entry	vehicle_list[VEHICLE_LIST_SIZE];
