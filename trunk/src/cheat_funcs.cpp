@@ -3259,6 +3259,32 @@ uint8_t *hex_to_bin ( const char *str )
 	return sbuf;
 }
 
+D3DCOLOR hex_to_color( const char *str, int len )
+{
+	char buf[12];
+	strncpy_s( buf, str, len );
+	D3DCOLOR color = 0x00;
+	byte *colorByteSet = ( byte * ) &color;
+	int stri = 0;
+	for ( int i = sizeof( color ) - 1; i >= 0; i-- )
+	{
+		if ( i == 3 && len == 6 )
+		{
+			colorByteSet[3] = 0xFF;
+		}
+		else
+		{
+			signed char bh = hex_to_dec( buf[stri++] );
+			signed char bl = hex_to_dec( buf[stri++] );
+			if ( bh != -1 && bl != -1 )
+			{
+				colorByteSet[i] = bl | ( bh << 4 );
+			}
+		}
+	}
+	return color;
+}
+
 // new functions related to R* classes //
 CVehicle *getSelfCVehicle ( void )
 {

@@ -236,7 +236,7 @@ void cheat_teleport_nearest_car ( void )
 
 void cheat_handle_misc ( void )
 {
-	if ( set.clickwarp_enabled )
+	if ( set.clickwarp_enabled && iIsSAMPSupported )
 	{
 		if(KEY_PRESSED(set.key_clickwarp_enable))
 		{

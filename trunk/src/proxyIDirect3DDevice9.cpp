@@ -60,23 +60,23 @@ CD3DRender				*render = new CD3DRender( 128 );
 // create font objects
 
 // also HUD somehow, the HUD comment below isn't totally right
-CD3DFont				*pD3DFont = new CD3DFont( "Tahoma", 10, FW_BOLD );
+CD3DFont				*pD3DFont = new CD3DFont( "Tahoma", 10, FCR_BORDER );
 
 //pd3dFont_sampStuff = player info list, player score list, player ESP
-CD3DFont				*pD3DFont_sampStuff = new CD3DFont( "Tahoma", 10, FW_BOLD | FCR_BORDER );
+CD3DFont				*pD3DFont_sampStuff = new CD3DFont( "Tahoma", 10, FCR_BORDER );
 
 //pD3DFontFixed = cheat_state_msg, HUD
-CD3DFont				*pD3DFontFixed = new CD3DFont( "Small Fonts", 8, FW_BOLD );
+CD3DFont				*pD3DFontFixed = new CD3DFont( "Small Fonts", 8, FCR_BORDER );
 
 //pD3DFontFixedSmall = health under bars (cars, players), vehicle ESP
-CD3DFont				*pD3DFontFixedSmall = new CD3DFont( "Small Fonts", 8, FW_BOLD );
+CD3DFont				*pD3DFontFixedSmall = new CD3DFont( "Small Fonts", 8, FCR_BORDER );
 
 //pD3DFontChat = chat, kill list
 //CD3DFont				*pD3DFontChat = new CD3DFont( "Tahoma", 10, FCR_NONE );
-CD3DFont				*pD3DFontChat = new CD3DFont( "Tahoma", 11, FW_BOLD | FCR_BORDER );
+CD3DFont				*pD3DFontChat = new CD3DFont( "Tahoma", 11, FCR_BOLD | FCR_BORDER );
 
 //pD3DFontDebugWnd = debug window
-CD3DFont				*pD3DFontDebugWnd = new CD3DFont("Lucida Console", 8, FW_BOLD | FCR_BORDER );
+CD3DFont				*pD3DFontDebugWnd = new CD3DFont("Lucida Console", 8, FCR_BORDER );
 
 #define MENU_ROWS					12
 #define MENU_WIDTH					400
@@ -1254,7 +1254,7 @@ void renderPlayerTags ( void )
 	iter = pPools->m_pedPool.map.begin();
 
 	// start render ESP tags
-	float w, h, playerBaseY;
+	float h, playerBaseY;
 	while ( iter.pos < iter.end )
 	{
 		// map iterator pointer to our pointer
@@ -1357,9 +1357,20 @@ void renderPlayerTags ( void )
 			// this should calculate the anti-aliasing top edge somehow
 			h = pD3DFont_sampStuff->DrawHeight() - 1;
 			_snprintf_s( buf, sizeof(buf)-1, "%s (%d)", getPlayerName(iSAMPID), iSAMPID );
-			w = pD3DFont_sampStuff->DrawLength( buf );
 			pD3DFont_sampStuff->PrintShadow( g_playerTagInfo[iGTAID].tagPosition.fX, playerBaseY - h,
 				samp_color_get( iSAMPID, 0xDD000000 ), buf );
+
+			if ( g_Players->pRemotePlayer[iSAMPID]->pPlayerData->iAFKState == 2 )
+			{
+				char AFKText[] = "AFK";
+				float w = pD3DFontFixedSmall->DrawLength( AFKText );
+				h = pD3DFontFixedSmall->DrawHeight() + 1;
+				render->D3DBox( g_playerTagInfo[iGTAID].tagPosition.fX + ESP_tag_player_D3DBox_pixelOffsetX + 100.0f + 1.0f,
+					playerBaseY + ESP_tag_player_D3DBox_pixelOffsetY, pD3DFont_sampStuff->DrawLength( AFKText ) + 2.0f, 10.0f, D3DCOLOR_ARGB(111, 0, 0, 0) );
+				pD3DFontFixedSmall->PrintShadow( g_playerTagInfo[iGTAID].tagPosition.fX + ESP_tag_player_D3DBox_pixelOffsetX + 100.0f + 2.0f, playerBaseY - h + 10.0f,
+					D3DCOLOR_ARGB(130, 170, 170, 170), AFKText );
+
+			}
 		}
 	}
 
@@ -1611,7 +1622,7 @@ void RenderPickupTexts ( void )
 
 	if ( cheat_state->_generic.cheat_panic_enabled )
 		return;
-	if ( g_SAMP->pPools.pPool_Pickup == NULL )
+	if ( g_SAMP->pPools->pPool_Pickup == NULL )
 		return;
 
 	struct actor_info	*self = actor_info_get( ACTOR_SELF, 0 );
@@ -1626,14 +1637,14 @@ void RenderPickupTexts ( void )
 	{
 		for ( i = 0; i < SAMP_PICKUP_MAX; i++ )
 		{
-			if ( g_SAMP->pPools.pPool_Pickup->pickup[i].iModelID == 0 )
+			if ( g_SAMP->pPools->pPool_Pickup->pickup[i].iModelID == 0 )
 				continue;
-			if ( g_SAMP->pPools.pPool_Pickup->pickup[i].iType == 0 )
+			if ( g_SAMP->pPools->pPool_Pickup->pickup[i].iType == 0 )
 				continue;
 
 			float		pos[3], screenpos[3];
 			D3DXVECTOR3 poss, screenposs;
-			vect3_copy( g_SAMP->pPools.pPool_Pickup->pickup[i].fPosition, pos );
+			vect3_copy( g_SAMP->pPools->pPool_Pickup->pickup[i].fPosition, pos );
 			if ( vect3_near_zero(pos) )
 				continue;
 			if ( vect3_dist( pos, &self->base.matrix[4 * 3] ) > set.pickup_tags_dist )
@@ -1649,7 +1660,7 @@ void RenderPickupTexts ( void )
 			if ( screenpos[2] < 1.f )
 				continue;
 
-			_snprintf_s( buf, sizeof(buf)-1, "Pickup: %d, ModelID: %d", i, g_SAMP->pPools.pPool_Pickup->pickup[i].iModelID );
+			_snprintf_s( buf, sizeof(buf)-1, "Pickup: %d, ModelID: %d", i, g_SAMP->pPools->pPool_Pickup->pickup[i].iModelID );
 			pD3DFontFixed->PrintShadow( screenpos[0], screenpos[1] - 5.0f, D3DCOLOR_XRGB(0, 200, 0), buf );
 		}
 	}
@@ -1662,7 +1673,7 @@ void RenderObjectTexts ( void )
 	struct actor_info	*self = actor_info_get( ACTOR_SELF, 0 );
 	if ( cheat_state->_generic.cheat_panic_enabled || self == NULL )
 		return;
-	if ( g_SAMP->pPools.pPool_Object == NULL )
+	if ( g_SAMP->pPools->pPool_Object == NULL )
 		return;
 
 	if ( (GetAsyncKeyState(VK_TAB) < 0 && set.d3dtext_score)
@@ -1673,16 +1684,16 @@ void RenderObjectTexts ( void )
 	int		i;
 	for ( i = 0; i < SAMP_OBJECTS_MAX; i++ )
 	{
-		if ( g_SAMP->pPools.pPool_Object->iIsListed[i] != 1 )
+		if ( g_SAMP->pPools->pPool_Object->iIsListed[i] != 1 )
 			continue;
-		if ( g_SAMP->pPools.pPool_Object->object[i] == NULL )
+		if ( g_SAMP->pPools->pPool_Object->object[i] == NULL )
 			continue;
-		if ( g_SAMP->pPools.pPool_Object->object[i]->pGTAObject == NULL )
+		if ( g_SAMP->pPools->pPool_Object->object[i]->pGTAObject == NULL )
 			continue;
 
 		float		pos[3], screenpos[3];
 		D3DXVECTOR3 poss, screenposs;
-		vect3_copy( &g_SAMP->pPools.pPool_Object->object[i]->pGTAObject->base.matrix[4 * 3], pos );
+		vect3_copy( &g_SAMP->pPools->pPool_Object->object[i]->pGTAObject->base.matrix[4 * 3], pos );
 		if ( vect3_near_zero(pos) )
 			continue;
 		if ( vect3_dist(pos, &self->base.matrix[4 * 3]) > set.object_tags_dist )
@@ -1699,7 +1710,7 @@ void RenderObjectTexts ( void )
 			continue;
 
 		_snprintf_s( buf, sizeof(buf)-1, "Object: %d, ModelID: %d", i,
-				 g_SAMP->pPools.pPool_Object->object[i]->pGTAObject->base.model_alt_id );
+				 g_SAMP->pPools->pPool_Object->object[i]->pGTAObject->base.model_alt_id );
 		pD3DFontFixed->PrintShadow( screenpos[0], screenpos[1] - 5.0f, D3DCOLOR_XRGB(200, 200, 0), buf );
 	}
 }
@@ -1874,7 +1885,7 @@ void renderTextLabels ()
 	if ( cheat_state->_generic.cheat_panic_enabled )
 		return;
 
-	if ( g_SAMP->pPools.pPool_Text3D == NULL || g_Vehicles == NULL || g_Players == NULL )
+	if ( g_SAMP->pPools->pPool_Text3D == NULL || g_Vehicles == NULL || g_Players == NULL )
 		return;
 
 	struct actor_info	*self = actor_info_get( ACTOR_SELF, 0 );
@@ -1894,21 +1905,21 @@ void renderTextLabels ()
 	char	buf[2048];
 	for ( int i = 0; i < MAX_3DTEXT; i++ )
 	{
-		if ( !g_SAMP->pPools.pPool_Text3D->iIsListed[i] )
+		if ( !g_SAMP->pPools->pPool_Text3D->iIsListed[i] )
 			continue;
-		if ( g_SAMP->pPools.pPool_Text3D->textLabel[i].pText != NULL )
+		if ( g_SAMP->pPools->pPool_Text3D->textLabel[i].pText != NULL )
 		{
 			float		pos[3], screenpos[3];
 			D3DXVECTOR3 poss, screenposs;
 
-			if ( g_SAMP->pPools.pPool_Text3D->textLabel[i].sAttachedToPlayerID == ((uint16_t) - 1)
-			 &&	 g_SAMP->pPools.pPool_Text3D->textLabel[i].sAttachedToVehicleID == ((uint16_t) - 1) )
+			if ( g_SAMP->pPools->pPool_Text3D->textLabel[i].sAttachedToPlayerID == ((uint16_t) - 1)
+			 &&	 g_SAMP->pPools->pPool_Text3D->textLabel[i].sAttachedToVehicleID == ((uint16_t) - 1) )
 			{
-				vect3_copy( g_SAMP->pPools.pPool_Text3D->textLabel[i].fPosition, pos );
+				vect3_copy( g_SAMP->pPools->pPool_Text3D->textLabel[i].fPosition, pos );
 			}
-			else if ( g_SAMP->pPools.pPool_Text3D->textLabel[i].sAttachedToPlayerID != ((uint16_t) - 1) )
+			else if ( g_SAMP->pPools->pPool_Text3D->textLabel[i].sAttachedToPlayerID != ((uint16_t) - 1) )
 			{
-				int id = g_SAMP->pPools.pPool_Text3D->textLabel[i].sAttachedToPlayerID;
+				int id = g_SAMP->pPools->pPool_Text3D->textLabel[i].sAttachedToPlayerID;
 				// check if player is valid
 				if ( g_Players->pRemotePlayer[id] == NULL || g_Players->pRemotePlayer[id]->pPlayerData == NULL 
 					|| g_Players->pRemotePlayer[id]->pPlayerData->pSAMP_Actor == NULL
@@ -1919,9 +1930,9 @@ void renderTextLabels ()
 				if ( !near_zero(pos[2]) )
 					pos[2] += 0.5f;
 			}
-			else if ( g_SAMP->pPools.pPool_Text3D->textLabel[i].sAttachedToVehicleID != ((uint16_t) - 1) )
+			else if ( g_SAMP->pPools->pPool_Text3D->textLabel[i].sAttachedToVehicleID != ((uint16_t) - 1) )
 			{
-				int id = g_SAMP->pPools.pPool_Text3D->textLabel[i].sAttachedToVehicleID;
+				int id = g_SAMP->pPools->pPool_Text3D->textLabel[i].sAttachedToVehicleID;
 				// check if vehicle is valid
 				if ( g_Vehicles->pGTA_Vehicle[id] == NULL )
 					continue;
@@ -1945,8 +1956,8 @@ void renderTextLabels ()
 			if ( screenpos[2] < 1.f )
 				continue;
 
-			snprintf( buf, sizeof(buf), "%s", g_SAMP->pPools.pPool_Text3D->textLabel[i].pText );
-			pD3DFontFixed->PrintShadow( screenpos[0], screenpos[1], g_SAMP->pPools.pPool_Text3D->textLabel[i].color,
+			snprintf( buf, sizeof(buf), "%s", g_SAMP->pPools->pPool_Text3D->textLabel[i].pText );
+			pD3DFontFixed->PrintShadow( screenpos[0], screenpos[1], g_SAMP->pPools->pPool_Text3D->textLabel[i].color,
 										buf );
 		}
 	}
@@ -2645,18 +2656,18 @@ void renderChat ( void )
 		for ( ; i > iLinesForLoop; i-- )
 		{
 			struct stChatEntry	*ent = &g_Chat->chatEntry[i];
-
+			static const D3DCOLOR alpha = 0xFF000000;
 			switch ( ent->iType )
 			{
 			case 2:
 				pw = pD3DFontChat->DrawLength( ent->szPrefix ) + pD3DFontChat->DrawLength( " " );
-				pD3DFontChat->PrintShadow( 35.0f, fYChatPos, ent->clPrefixColor, ent->szPrefix );
-				pD3DFontChat->PrintShadow( 35.0f + pw, fYChatPos, ent->clTextColor, ent->szText );
+				pD3DFontChat->PrintShadow( 35.0f, fYChatPos, ent->clPrefixColor | alpha, ent->szPrefix );
+				pD3DFontChat->PrintShadow( 35.0f + pw, fYChatPos, ent->clTextColor | alpha, ent->szText );
 				break;
 
 			case 4:
 			case 8:
-				pD3DFontChat->PrintShadow( 35.0f, fYChatPos, ent->clTextColor, ent->szText );
+				pD3DFontChat->PrintShadow( 35.0f, fYChatPos, ent->clTextColor | alpha, ent->szText );
 				break;
 			}
 
@@ -2954,7 +2965,7 @@ void renderPlayerInfo ( int iPlayerID )
 			pD3DFontFixed->PrintShadow( 20.0f, y, color, buf );
 			( y ) += 1.0f + pD3DFontFixed->DrawHeight();
 			sprintf( buf, "    pLocalPlayer->onFootData.iCurrentAnimationID: %x",
-					 g_Players->pLocalPlayer->onFootData.iCurrentAnimationID );
+					 g_Players->pLocalPlayer->onFootData.sCurrentAnimationID );
 			pD3DFontFixed->PrintShadow( 20.0f, y, color, buf );
 			( y ) += 1.0f + pD3DFontFixed->DrawHeight();
 		}
@@ -3126,11 +3137,14 @@ void renderSAMP ( void )
 		if ( isBadPtr_writeAny(g_SAMP, sizeof(stSAMP)) )
 			return;
 
-		g_Players = g_SAMP->pPools.pPool_Player;
+		if ( isBadPtr_writeAny(g_SAMP->pPools, sizeof(stSAMPPools)) )
+			return;
+
+		g_Players = g_SAMP->pPools->pPool_Player;
 		if ( isBadPtr_writeAny(g_Players, sizeof(stPlayerPool)) )
 			return;
 
-		g_Vehicles = g_SAMP->pPools.pPool_Vehicle;
+		g_Vehicles = g_SAMP->pPools->pPool_Vehicle;
 		if ( isBadPtr_writeAny(g_Vehicles, sizeof(stVehiclePool)) )
 			return;
 
@@ -3160,9 +3174,7 @@ void renderSAMP ( void )
 		// patch
 		memcpy_safe((void *)(g_dwSAMP_Addr + SAMP_PATCH_NOCARCOLORRESETTING), "\xC3", 1);
 		memcpy_safe((void *)0x004B35A0, (uint8_t *)"\x83\xEC\x0C\x56\x8B\xF1", 6 ); // godmode patch
-		memcpy_safe((void *)0x82C5CC, "\xC9\xC3", 2); // little anticrash patch (gta:sa)
 		
-
 		// 0x: Set's the Frame Sleeping to 0 so you get more performance (sa:mp init is so far a good place ;d) .
 		*(BYTE*)0xBAB318 = 0;  *(BYTE*)0x53E94C = 0;
 
@@ -3194,9 +3206,7 @@ void renderSAMP ( void )
 		renderTextLabels();
 		clickWarp();
 
-		if ( iViewingInfoPlayer == -1 )
-		{ }
-		else
+		if ( iViewingInfoPlayer != -1 )
 		{
 			if ( iViewingInfoPlayer != -2 && g_Players->pRemotePlayer[iViewingInfoPlayer] == NULL )
 				iViewingInfoPlayer = -1;
@@ -3394,11 +3404,11 @@ void proxyID3DDevice9_InitWindowMode ( D3DPRESENT_PARAMETERS *pPresentationParam
 		m_ForceUpdate = true;
 	}
 
-	// basic presentation parameters we want
-	g_pGTAPresent->Flags = 0;
+	// we do not want basic presentation parameters anymore
+	/*g_pGTAPresent->Flags = 0;
 	g_pGTAPresent->PresentationInterval = 0;
 	pPresentationParameters->Flags = 0;
-	pPresentationParameters->PresentationInterval = 0;
+	pPresentationParameters->PresentationInterval = 0;*/
 
 	// get the current video mode & the correct back buffer size
 	int			m_dwVideoMode = g_pCSettingsSAInterface->dwVideoMode;
@@ -4041,55 +4051,8 @@ HRESULT proxyIDirect3DDevice9::Reset ( D3DPRESENT_PARAMETERS *pPresentationParam
 				Sleep( 100 );
 		}
 
-		// Window Mode shitz... awh
-		// window mode toggle, flips set.window_mode bit
-		if ( g_isRequestingWindowModeToggle )
-		{
-			g_isRequestingWindowModeToggle = false;
-			set.window_mode ^= 1;
-		}
-		if ( set.window_mode ) {
-			if ( set.window_mode_titlebar )
-			{
-				RECT	um;		// damn near killed um
-
-				// add caption bar, etc
-				SetWindowLong( pPresentationParameters->hDeviceWindow, GWL_STYLE,
-							   WS_POPUP | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_VISIBLE );
-
-				// update caption bar, etc
-				SetWindowPos( pPresentationParameters->hDeviceWindow, HWND_NOTOPMOST, 0, 0, 0, 0,
-							  SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE );
-
-				// the client area of the window must be the same size as the back buffer
-				GetClientRect( pPresentationParameters->hDeviceWindow, &um );
-				if ( um.right == pPresentationParameters->BackBufferWidth
-				 &&	 um.bottom == pPresentationParameters->BackBufferHeight )
-				SetWindowPos( pPresentationParameters->hDeviceWindow, HWND_NOTOPMOST, 0, 0,
-							  pPresentationParameters->BackBufferWidth + (pPresentationParameters->BackBufferWidth - um.right),
-								  pPresentationParameters->BackBufferHeight + (pPresentationParameters->BackBufferHeight - um.bottom),
-									  SWP_FRAMECHANGED | SWP_SHOWWINDOW | SWP_NOMOVE );
-				if ( pool_actor != NULL )
-				{
-					int x, y;
-					x = GetSystemMetrics( SM_CXSCREEN );
-					y = GetSystemMetrics( SM_CYSCREEN );
-					SetWindowPos( pPresentationParameters->hDeviceWindow, HWND_NOTOPMOST,
-								  (x / 2) - (pPresentationParameters->BackBufferWidth / 2),
-								  (y / 2) - (pPresentationParameters->BackBufferHeight / 2),
-								  pPresentationParameters->BackBufferWidth + (pPresentationParameters->BackBufferWidth - um.right),
-							  pPresentationParameters->BackBufferHeight +
-									  (pPresentationParameters->BackBufferHeight - um.bottom), SWP_SHOWWINDOW );
-				}
-			}
-			else
-			{
-				// center the window
-				SetWindowPos( pPresentationParameters->hDeviceWindow, HWND_NOTOPMOST, 0, 0, 0, 0,
-							  SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE );
-			}
-		}
-		set.window_mode = ( g_RsGlobal->ps->fullscreen == 0 );
+		// init our window mode
+		proxyID3DDevice9_InitWindowMode( pPresentationParameters );
 
 		// update the global Present Param struct AFTER original reset, only if it's ok
 		pPresentParam = *pPresentationParameters;

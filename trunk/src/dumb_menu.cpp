@@ -519,20 +519,20 @@ static void menu_telepickup_populate ( struct menu *menu )
 {
 	menu_items_free( menu );
 
-	if ( g_SAMP->pPools.pPool_Pickup == NULL )
+	if ( g_SAMP->pPools->pPool_Pickup == NULL )
 		return;
 
 	char	text[64];
 	int		i;
 	for ( i = 0; i < SAMP_PICKUP_MAX; i++ )
 	{
-		if ( g_SAMP->pPools.pPool_Pickup->pickup[i].iModelID == 0 )
+		if ( g_SAMP->pPools->pPool_Pickup->pickup[i].iModelID == 0 )
 			continue;
-		if ( g_SAMP->pPools.pPool_Pickup->pickup[i].iType == 0 )
+		if ( g_SAMP->pPools->pPool_Pickup->pickup[i].iType == 0 )
 			continue;
 
 		D3DCOLOR	color = MENU_COLOR_DEFAULT;
-		snprintf( text, sizeof(text), "Pickup (%d, ModelID: %d)", i, g_SAMP->pPools.pPool_Pickup->pickup[i].iModelID );
+		snprintf( text, sizeof(text), "Pickup (%d, ModelID: %d)", i, g_SAMP->pPools->pPool_Pickup->pickup[i].iModelID );
 		menu_item_add( menu, NULL, text, i, color, NULL );
 	}
 }
@@ -543,18 +543,18 @@ static int menu_callback_telepickup ( int op, struct menu_item *item )
 	{
 		int id = item->id;
 
-		if ( g_SAMP->pPools.pPool_Pickup == NULL )
+		if ( g_SAMP->pPools->pPool_Pickup == NULL )
 			return 0;
-		if ( g_SAMP->pPools.pPool_Pickup->pickup[id].iType == 0 )
+		if ( g_SAMP->pPools->pPool_Pickup->pickup[id].iType == 0 )
 			return 0;
-		if ( g_SAMP->pPools.pPool_Pickup->pickup[id].iModelID == 0 )
+		if ( g_SAMP->pPools->pPool_Pickup->pickup[id].iModelID == 0 )
 			return 0;
 		if ( item->id == ID_NONE )
 			return 0;
 
 		float	pos[3];
 
-		vect3_copy( g_SAMP->pPools.pPool_Pickup->pickup[id].fPosition, pos );
+		vect3_copy( g_SAMP->pPools->pPool_Pickup->pickup[id].fPosition, pos );
 		pos[1] += 2.0f;
 		cheat_teleport( pos, 0 );
 
@@ -568,7 +568,7 @@ static void menu_teleobject_populate ( struct menu *menu )
 {
 	menu_items_free( menu );
 
-	if ( g_SAMP->pPools.pPool_Object == NULL )
+	if ( g_SAMP->pPools->pPool_Object == NULL )
 		return;
 
 	char	text[64];
@@ -577,20 +577,20 @@ static void menu_teleobject_populate ( struct menu *menu )
 	{
 		D3DCOLOR	color = MENU_COLOR_DEFAULT;
 
-		if ( g_SAMP->pPools.pPool_Object->iIsListed[i] != 1 )
+		if ( g_SAMP->pPools->pPool_Object->iIsListed[i] != 1 )
 			continue;
-		if ( g_SAMP->pPools.pPool_Object->object[i] == NULL )
+		if ( g_SAMP->pPools->pPool_Object->object[i] == NULL )
 			continue;
-		if ( g_SAMP->pPools.pPool_Object->object[i]->pGTAObject == NULL )
+		if ( g_SAMP->pPools->pPool_Object->object[i]->pGTAObject == NULL )
 			continue;
 
 		float	pos[3];
-		vect3_copy( &g_SAMP->pPools.pPool_Object->object[i]->pGTAObject->base.matrix[4 * 3], pos );
+		vect3_copy( &g_SAMP->pPools->pPool_Object->object[i]->pGTAObject->base.matrix[4 * 3], pos );
 		if ( vect3_near_zero(pos) )
 			continue;
 
 		snprintf( text, sizeof(text), "Object (%d, ModelID %d)", i,
-				  g_SAMP->pPools.pPool_Object->object[i]->pGTAObject->base.model_alt_id );
+				  g_SAMP->pPools->pPool_Object->object[i]->pGTAObject->base.model_alt_id );
 		menu_item_add( menu, NULL, text, i, color, NULL );
 	}
 }
@@ -599,7 +599,7 @@ static int menu_callback_teleobject ( int op, struct menu_item *item )
 {
 	if ( op == MENU_OP_SELECT )
 	{
-		if ( g_SAMP->pPools.pPool_Object == NULL )
+		if ( g_SAMP->pPools->pPool_Object == NULL )
 			return 0;
 		if ( item->id == ID_NONE )
 			return 0;
@@ -607,19 +607,19 @@ static int menu_callback_teleobject ( int op, struct menu_item *item )
 		int		id = item->id;
 		float	pos[3];
 
-		if ( g_SAMP->pPools.pPool_Object->iIsListed[id] != 1 )
+		if ( g_SAMP->pPools->pPool_Object->iIsListed[id] != 1 )
 		{
 			addMessageToChatWindow( "Object does not exist." );
 			return 0;
 		}
 
-		if ( g_SAMP->pPools.pPool_Object->object[id]->pGTAObject == NULL )
+		if ( g_SAMP->pPools->pPool_Object->object[id]->pGTAObject == NULL )
 		{
 			addMessageToChatWindow( "Invalid object info." );
 			return 0;
 		}
 
-		vect3_copy( &g_SAMP->pPools.pPool_Object->object[id]->pGTAObject->base.matrix[4 * 3], pos );
+		vect3_copy( &g_SAMP->pPools->pPool_Object->object[id]->pGTAObject->base.matrix[4 * 3], pos );
 		pos[2] += 2.0f;
 		cheat_teleport( pos, 0 );
 

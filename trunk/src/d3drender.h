@@ -135,7 +135,7 @@ public:
 	HRESULT		Initialize ( IDirect3DDevice9 *pD3Ddev );
 	HRESULT		Invalidate ();
 
-	HRESULT		Print ( float x, float y, DWORD color, const char *szText );
+	HRESULT		Print ( float x, float y, DWORD color, const char *szText, bool isShadow = false );
 	HRESULT		PrintShadow ( float x, float y, DWORD color, const char *szText );
 
 	float		DrawLength ( const char * ) const;

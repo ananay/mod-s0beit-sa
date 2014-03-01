@@ -428,12 +428,10 @@ HRESULT CD3DFont::Invalidate ()
 	return S_OK;
 }
 
-HRESULT CD3DFont::Print ( float x, float y, DWORD color, const char *szText )
+HRESULT CD3DFont::Print ( float x, float y, DWORD color, const char *szText, bool isShadow )
 {
 	if ( !m_isReady )
 		return E_FAIL;
-
-	float	strWidth = DrawLength( szText );
 
 	x -= (float)m_chrSpacing;
 
@@ -446,7 +444,7 @@ HRESULT CD3DFont::Print ( float x, float y, DWORD color, const char *szText )
 	m_pD3Ddev->SetTexture( 0, m_pD3Dtex );
 	m_pD3Ddev->SetStreamSource( 0, m_pD3Dbuf, 0, sizeof(d3dvertex_s) );
 
-	while ( *szText )
+	if ( szText && *szText )
 	{
 		UINT		usedTriangles = 0;
 		d3dvertex_s *pVertex;
@@ -458,12 +456,39 @@ HRESULT CD3DFont::Print ( float x, float y, DWORD color, const char *szText )
 			return E_FAIL;
 		}
 
-		for ( ; *szText; szText++ )
+		size_t len = strlen( szText );
+		for ( size_t cpos = 0; cpos < len && szText[cpos] != '\0'; cpos++ )
 		{
-			int c = *(unsigned char *)szText - 32;
-
+			int c = * ( unsigned char * ) ( &szText[cpos] ) - 32;
 			if ( !(c >= 0 && c < 224) )
 				continue;
+
+			if ( szText[cpos] == '{' )
+			{
+				size_t npos = cpos + 7;
+				if ( npos < len && szText[npos] == '}' )
+				{
+					if ( !isShadow )
+					{
+						color = hex_to_color( &szText[cpos + 1], 6 );
+					}
+					cpos = npos;
+					continue;
+				}
+				else 
+				{
+					npos += 2;
+					if ( npos < len && szText[npos] == '}' )
+					{
+						if ( !isShadow )
+						{
+							color = hex_to_color( &szText[cpos + 1], 8 );
+						}
+						cpos = npos;
+						continue;
+					}
+				}
+			}
 
 			float	tx1 = m_fTexCoords[c][0];
 			float	tx2 = m_fTexCoords[c][2];
@@ -482,7 +507,6 @@ HRESULT CD3DFont::Print ( float x, float y, DWORD color, const char *szText )
 				w -= 2.0f;
 
 			x += w - ( m_chrSpacing * 2 );
-
 			usedTriangles += 2;
 			if ( usedTriangles >= m_maxTriangles )
 				break;
@@ -503,11 +527,8 @@ HRESULT CD3DFont::Print ( float x, float y, DWORD color, const char *szText )
 
 HRESULT CD3DFont::PrintShadow ( float x, float y, DWORD color, const char *szText )
 {
-	if ( set.render_text_shadows )
-	{
-		DWORD shadow = D3DCOLOR_ARGB((BYTE)HIBYTE(HIWORD(color)), 0, 0, 0);
-		Print( x + 1, y + 1, shadow, szText );
-	}
+	DWORD shadow = D3DCOLOR_ARGB((BYTE)HIBYTE(HIWORD(color)), 0, 0, 0);
+	Print( x + 1, y + 1, shadow, szText, true );
 	Print( x, y, color, szText );
 
 	return S_OK;
@@ -518,13 +539,34 @@ float CD3DFont::DrawLength ( const char *szText ) const
 	float	len = 0.0f;
 	float	sub = ( m_dwCreateFlags & FCR_BORDER ) ? 2.0f : 0.0f;
 
-	for ( const char *p = szText; *p; p++ )
+	size_t strl = strlen( szText );
+	for ( size_t cpos = 0; cpos < strl && szText[cpos] != '\0'; cpos++ )
 	{
-		int c = *(unsigned char *)p - 32;
-		if ( c >= 0 && c < 224 )
-			len += ( (m_fTexCoords[c][2] - m_fTexCoords[c][0]) * m_texWidth - sub ) - m_chrSpacing * 2;
-	}
+		int c = * ( unsigned char * ) ( &szText[cpos] ) - 32;
+		if ( !(c >= 0 && c < 224) )
+			continue;
 
+		if ( szText[cpos] == '{' )
+		{
+			size_t npos = cpos + 7;
+			if ( npos < strl && szText[npos] == '}' )
+			{
+				cpos = npos;
+				continue;
+			}
+			else 
+			{
+				npos += 2;
+				if ( npos < strl && szText[npos] == '}' )
+				{
+					cpos = npos;
+					continue;
+				}
+			}
+		}
+
+		len += ( (m_fTexCoords[c][2] - m_fTexCoords[c][0]) * m_texWidth - sub ) - m_chrSpacing * 2;
+	}
 	return len;
 }
 
