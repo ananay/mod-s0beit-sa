@@ -7,6 +7,7 @@ http://blasthack.net
 Version 4.3.3.3
 * Updated on 0.3z R1
 * mod's chat now more colorful
+* Fixed crash when exiting the game
 
 Version 4.3.3.2
 * Fixed issues with the FPS (caused by the Window Mode).
